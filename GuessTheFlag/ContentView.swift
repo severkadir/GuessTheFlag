@@ -16,6 +16,9 @@ struct ContentView: View {
     @State private var showingScore = false
     @State private var scoreTitle = ""
     
+    @State private var score = 0
+    @State private var questionNumber = 0
+    
     
     
     var body: some View {
@@ -64,7 +67,7 @@ struct ContentView: View {
                 Spacer()
                 Spacer()
                 
-                Text("Score: \(correctAnswer)")
+                Text("Score: \(score)")
                     .foregroundStyle(.white)
                     .font(.title.bold())
                 
@@ -75,22 +78,52 @@ struct ContentView: View {
         .alert(scoreTitle, isPresented: $showingScore) {
             Button("Continue", action: askQuestion)
         } message: {
-            Text("Your Score is ???")
+            Text("Your Score is \(score)")
         }
         
     }
     
     func flagTapped(_ number: Int) {
         if number == correctAnswer {
+            score += 1
             scoreTitle = "Correct"
         } else {
             scoreTitle = "Wrong"
+            scoreTitle += "\nThe correct flag is \(countries[correctAnswer])."
         }
-        
-        showingScore = true
+     
+        if questionNumber == 8{
+            scoreTitle = "Game Over"
+            showingScore = true
+        } else {
+            questionNumber += 1
+            showingScore = true
+        }
     }
     
     func askQuestion() {
+        
+        if questionNumber == 8 {
+                // Oyun bittiğinde kullanıcıya yeniden başlamak isteyip istemediğini sorar
+                let ac = UIAlertController(title: "Game Over", message: "Your final score is \(score). Do you want to play again?", preferredStyle: .alert)
+                ac.addAction(UIAlertAction(title: "Yes", style: .default, handler: { _ in
+                    resetGame()
+                }))
+                ac.addAction(UIAlertAction(title: "No", style: .cancel, handler: nil))
+                
+                if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
+                   let rootVC = windowScene.windows.first?.rootViewController {
+                    rootVC.present(ac, animated: true)
+                }
+            } else {
+                countries.shuffle()
+                correctAnswer = Int.random(in: 0...2)
+            }
+    }
+    
+    func resetGame() {
+        score = 0
+        questionNumber = 1
         countries.shuffle()
         correctAnswer = Int.random(in: 0...2)
     }
